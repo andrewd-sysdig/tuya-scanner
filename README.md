@@ -61,7 +61,8 @@ WantedBy=multi-user.target
 ```
 
 # run
----------------------------
+```
 sudo systemctl enable tuya-scanner
 sudo systemctl start tuya-scanner
 sudo systemctl status tuya-scanner
+```

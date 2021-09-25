@@ -1,13 +1,15 @@
 # tuya-scanner — Scanner with MQTT and Prometheus exporter for the TUYA Devices
 
 # buid
----------------------------
+```
 GOOS=linux GOARCH=arm GOARM=7 go build -o tuya-scanner ./cmd/worker/
+```
 
 # create
----------------------------
-sudo mkdir tuya-scanner
-sudo chmod +x tuya-scanner
+```
+sudo mkdir /opt/tuya-scanner
+sudo chmod +x /opt/tuya-scanner
+```
 
 - create scanner.env 
 ```

@@ -26,7 +26,7 @@ func Publish(app *application.Application, data *models.SensorData) {
 	_ = app.MQTT.Publish(topic20, false, payload20)
 
 	topic := fmt.Sprintf("%s/%s/state", app.Cfg.BrokerTopic, data.Name)
-	payload, _ := json.Marshal(data.Power_V)
+	payload, _ := json.Marshal(data.State)
 	log.Printf("[mqtt] Publishing %s state to %s\n", payload, topic)
 	_ = app.MQTT.Publish(topic, false, payload)
 }

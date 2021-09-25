@@ -13,7 +13,7 @@ var (
 	logPower_mAGauge = promauto.NewGaugeVec(
 		prometheus.GaugeOpts{
 			Namespace: "power",
-			Name:      "power_amps",
+			Name:      "amps",
 			Help:      "Power Amps.",
 		},
 		[]string{
@@ -24,7 +24,7 @@ var (
 	logPower_WGauge = promauto.NewGaugeVec(
 		prometheus.GaugeOpts{
 			Namespace: "power",
-			Name:      "power_watts",
+			Name:      "watts",
 			Help:      "Power Watts.",
 		},
 		[]string{
@@ -35,7 +35,7 @@ var (
 	logPower_VGauge = promauto.NewGaugeVec(
 		prometheus.GaugeOpts{
 			Namespace: "power",
-			Name:      "power_voltage",
+			Name:      "voltage",
 			Help:      "Power Voltage.",
 		},
 		[]string{

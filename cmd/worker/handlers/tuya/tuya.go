@@ -84,5 +84,6 @@ func parseTuyaData(app *application.Application, name string, data []byte) (*mod
 		Power_mA: d.Dps.Num18,
 		Power_W:  d.Dps.Num19 / 10,
 		Power_V:  d.Dps.Num20 / 10,
+		State:    string(data),
 	}, nil
 }

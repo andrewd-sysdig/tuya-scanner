@@ -6,4 +6,5 @@ type SensorData struct {
 	Power_mA float64
 	Power_W  float64
 	Power_V  float64
+	State    string
 }

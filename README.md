@@ -1,0 +1,1 @@
+# tuya-scanner — Scanner with MQTT and Prometheus exporter for the TUYA Devices

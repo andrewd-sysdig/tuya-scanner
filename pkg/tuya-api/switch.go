@@ -22,7 +22,8 @@ type Switch interface {
 	SetNW(bool, int, time.Duration) (bool, error)
 	Status() (bool, error)
 	StatusW(time.Duration) (bool, error)
-	TuyaStatus(time.Duration) ([]byte, error)
+	TuyaRefresh(time.Duration) ([]byte, error)
+	TuyaGetStatus(time.Duration) ([]byte, error)
 }
 
 const (
@@ -107,7 +108,26 @@ func (s *ISwitch) StatusW(delay time.Duration) (bool, error) {
 	}
 }
 
-func (s *ISwitch) TuyaStatus(delay time.Duration) ([]byte, error) {
+func (s *ISwitch) TuyaRefresh(delay time.Duration) ([]byte, error) {
+	c := MakeSyncChannel()
+	k := s.Subscribe(c)
+	defer s.Unsubscribe(k)
+
+	deadLine := time.Now().Add(delay)
+	err := s.App.SendEncryptedCommand(CodeMsgSet, s.App.RefreshMsg())
+	if err != nil {
+		return nil, err
+	}
+	for {
+		select {
+		case synMsg := <-c:
+			log.Println("[debug] synMsg:", synMsg.Code)
+		case <-time.After(time.Until(deadLine)):
+			return nil, nil // errors.New("TCP Request Timeout")
+		}
+	}
+}
+func (s *ISwitch) TuyaGetStatus(delay time.Duration) ([]byte, error) {
 	c := MakeSyncChannel()
 	k := s.Subscribe(c)
 	defer s.Unsubscribe(k)
@@ -125,7 +145,7 @@ func (s *ISwitch) TuyaStatus(delay time.Duration) ([]byte, error) {
 				return synMsg.Status, err
 			}
 		case <-time.After(time.Until(deadLine)):
-			return nil, errors.New("TCP Request Timeout")
+			return nil, nil // errors.New("TCP Request Timeout")
 		}
 	}
 }

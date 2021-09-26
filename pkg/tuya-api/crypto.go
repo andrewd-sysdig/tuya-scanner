@@ -23,6 +23,7 @@ func md5Sign(b []byte, key []byte, version string) []byte {
 	hash := h.Sum(nil)
 	return []byte(hex.EncodeToString(hash[4:12]))
 }
+
 func aesEncrypt(data []byte, key []byte, b64 bool) ([]byte, error) {
 	block, err := aes.NewCipher([]byte(key))
 	if err != nil {
@@ -68,6 +69,52 @@ func aesDecrypt(data []byte, key []byte, b64 bool) ([]byte, error) {
 		log.Println("[tuya-api] Decryption Error:", []byte{}, er2)
 		return nil, er2
 	}
+	bs := block.BlockSize()
+	if nc%bs != 0 && nc < 16 {
+		return []byte{}, errors.New("bad ciphertext len")
+	}
+	cleartext := make([]byte, nc)
+	for i := 0; i < nc; i = i + bs {
+		block.Decrypt(cleartext[i:i+bs], ciphertext[i:i+bs])
+	}
+	// remove padding
+	p := int(cleartext[nc-1])
+	if p < 0 || p > bs {
+		return []byte{}, errors.New("bad padding")
+	}
+	return cleartext[:nc-p], nil
+}
+
+func tmp_aesDecrypt(data []byte, key []byte, b64 bool) ([]byte, error) {
+
+	log.Println("[debug] Start Decrypt:", "Key:", string(key), "Byte:", data)
+
+	ciphertext := data
+	if b64 {
+		n := base64.StdEncoding.DecodedLen(len(data))
+		ciphertext = make([]byte, n)
+		nc, er1 := base64.StdEncoding.Decode(ciphertext, data)
+		if er1 != nil {
+			return []byte{}, er1
+		}
+		ciphertext = ciphertext[:nc]
+	}
+
+	nc := len(ciphertext)
+	log.Println("[debug] Length:", nc)
+
+	// if nc < 128 {
+	// 	return nil, nil
+	// }
+
+	block, er2 := aes.NewCipher([]byte(key))
+	log.Println("[debug] Block:", block)
+
+	if er2 != nil {
+		log.Println("[tuya-api] Decryption Error:", []byte{}, er2)
+		return nil, er2
+	}
+	
 	bs := block.BlockSize()
 	if nc%bs != 0 && nc < 16 {
 		return []byte{}, errors.New("bad ciphertext len")

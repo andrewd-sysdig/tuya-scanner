@@ -32,6 +32,7 @@ const (
 	CodeMsgStatus     = 10
 	CodeMsgPing       = 9
 	CodeMsgAutoStatus = 8
+	CodeMsgRefresh    = 18
 )
 
 // to be embedded in Device

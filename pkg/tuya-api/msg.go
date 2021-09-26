@@ -11,7 +11,6 @@ import (
 	"errors"
 	"fmt"
 	"log"
-	"strconv"
 	"time"
 )
 
@@ -20,6 +19,7 @@ func (d *Appliance) MakeBaseMsg() map[string]interface{} {
 	d.mutex.RLock()
 	defer d.mutex.RUnlock()
 	m := make(map[string]interface{})
+	m["gwId"] = d.GwId
 	m["devId"] = d.GwId
 	m["uid"] = d.GwId
 	m["t"] = time.Now().Unix()
@@ -55,26 +55,15 @@ func (d *Appliance) StatusMsg() []byte {
 func (d *Appliance) RefreshMsg() map[string]interface{} {
 	d.mutex.RLock()
 	defer d.mutex.RUnlock()
+
 	m := make(map[string]interface{})
+	m["gwId"] = d.GwId
 	m["devId"] = d.GwId
 	m["uid"] = d.GwId
 	m["t"] = time.Now().Unix()
-	m["dps"] = map[string]bool{strconv.Itoa(1): true}
+	m["dpId"] = [6]int{4, 5, 6, 18, 19, 20}
+
 	return m
-
-	// data, _ := json.Marshal(m)
-
-	// switch d.Version {
-	// case "3.3":
-	// b, er2 := aesEncrypt(data, d.key, false)
-	// if er2 != nil {
-	// 	return nil
-	// }
-	// return b
-	// 	return m
-	// default:
-	// 	return data
-	// }
 }
 
 // -------------------------------
@@ -99,6 +88,9 @@ func (d *Appliance) SendEncryptedCommand(cmd int, jdata interface{}) error {
 		b = append(b, sig...)
 		b = append(b, cipherText...)
 	case "3.3":
+		log.Println("[debug] SendRequest data:", string(data))
+		log.Println("[debug] SendRequest key:", string(d.key))
+
 		cipherText, er2 := aesEncrypt(data, d.key, false)
 		if er2 != nil {
 			d.mutex.RUnlock()
@@ -122,15 +114,50 @@ func (d *Appliance) SendEncryptedCommand(cmd int, jdata interface{}) error {
 	return nil
 }
 
+func (d *Appliance) SendEncryptedRefresh(cmd int, jdata interface{}) error {
+	d.mutex.RLock()
+	data, er1 := json.Marshal(jdata)
+	if er1 != nil {
+		d.mutex.RUnlock()
+		return fmt.Errorf("json marshal (%v)", er1)
+	}
+	var b []byte
+	switch d.Version {
+	case "3.1":
+		cipherText, er2 := aesEncrypt(data, d.key, true)
+		if er2 != nil {
+			d.mutex.RUnlock()
+			return fmt.Errorf("encrypt error(%v)", er2)
+		}
+		b = append(b, cipherText...)
+	case "3.3":
+		cipherText, er2 := aesEncrypt(data, d.key, false)
+		if er2 != nil {
+			d.mutex.RUnlock()
+			return fmt.Errorf("encrypt error(%v)", er2)
+		}
+		b = append(b, cipherText...)
+	default:
+		return errors.New("unknown version")
+	}
+	d.mutex.RUnlock()
+
+	select {
+	case d.tcpChan <- query{cmd, b}:
+	default:
+		return errors.New("device not ready")
+	}
+	return nil
+}
+
 func (d *Appliance) ProcessResponse(code int, b []byte) {
-	log.Println("[debug] Start Processing...")
-	log.Println("[debug] TCP ProcessResponse:", code, "Length:", len(b))
+	// log.Println("[debug] Start TCP Response Processing...")
+	// log.Println("[debug] TCP Response:", code, "Length:", len(b))
 	var i int
 	for i = 0; i < len(b) && b[i] == byte(0); i++ {
 	}
 	b = b[i:]
 	if len(b) == 0 { // can be an ack
-		log.Println("[debug] TCP ACK:", code, b)
 		d.device.ProcessResponse(code, b)
 		return
 	} // empty
@@ -141,7 +168,6 @@ func (d *Appliance) ProcessResponse(code int, b []byte) {
 	} else {
 		var err error
 
-		log.Println("[debug] Device Version:", d.Version)
 		if d.Version == "3.3" {
 			// https://github.com/codetheweb/tuyapi/blob/5a08481689c5062e17ff9a280d0e51815e2cafb7/lib/cipher.js#L54
 			if code == CodeMsgStatus {
@@ -150,13 +176,11 @@ func (d *Appliance) ProcessResponse(code int, b []byte) {
 				if err != nil {
 					log.Println("[tuya-api] Decryption Error:", err)
 				}
-				log.Println("[debug] Decryption Length:", len(data))
 			} else {
 				data, err = aesDecrypt(b[15:], d.key, false)
 				if err != nil {
 					log.Println("[tuya-api] Decryption Error:", err)
 				}
-				log.Println("[debug] Decryption Length:", len(data))
 				if data == nil {
 					return
 				}

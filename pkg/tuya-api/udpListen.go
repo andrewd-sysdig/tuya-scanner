@@ -20,7 +20,7 @@ func udpListener(dm *DeviceManager, encrypted bool) {
 		log.Fatal("UDP Listener failed:", err)
 	}
 	for {
-		buffer := make([]byte, 4048)
+		buffer := make([]byte, 1024)
 		n, _, err := cnx.ReadFrom(buffer)
 		buffer = buffer[:n]
 		if err == nil && len(buffer) > 16 {

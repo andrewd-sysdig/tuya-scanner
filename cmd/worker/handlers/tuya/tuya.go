@@ -5,6 +5,8 @@ import (
 	"log"
 	"time"
 
+	"github.com/SysdigDan/tuya-scanner/cmd/worker/handlers/exporter"
+	"github.com/SysdigDan/tuya-scanner/cmd/worker/handlers/mqtt"
 	"github.com/SysdigDan/tuya-scanner/cmd/worker/models"
 	"github.com/SysdigDan/tuya-scanner/pkg/application"
 	"github.com/SysdigDan/tuya-scanner/pkg/tuya-api"
@@ -56,25 +58,28 @@ func TuyaScanner(app *application.Application) {
 	for {
 		for _, b := range devList {
 			s, _ := b.(tuya.Switch)
+
+			// need to tell devices to refresh dps
 			_, err := s.TuyaRefresh(1 * time.Second)
 			if err != nil {
 				log.Printf("[tuya] Device %s - %s", b.Name(), err)
 			}
-			time.Sleep(1 * time.Second)
-			status, err := s.TuyaGetStatus(2 * time.Second)
+			// get status on devices
+			status, err := s.TuyaGetStatus(5 * time.Second)
 			if err != nil {
 				log.Printf("[tuya] Device %s - %s", b.Name(), err)
 			}
-			log.Println("[debug] Status:", string(status))
-			// data, err := parseTuyaData(app, b.Name(), status)
-			// if err != nil {
-			// 	log.Println("[tuya] error parsing sensor data:", err.Error())
-			// }
-			// log.Println("[debug] Data:", data.State)
-			// mqtt.Publish(app, data)
-			// exporter.LogPrometheusData(data.Name, data.Switch, data.Power_mA, data.Power_W, data.Power_V)
+
+			// parse data for processing
+			data, err := parseTuyaData(app, b.Name(), status)
+			if err != nil {
+				log.Println("[tuya] error parsing sensor data:", err.Error())
+			}
+			// publish sensor data
+			mqtt.Publish(app, data)
+			exporter.LogPrometheusData(data.Name, data.Switch, data.Power_mA, data.Power_W, data.Power_V)
+			time.Sleep(15 * time.Second)
 		}
-		time.Sleep(5 * time.Second)
 	}
 }
 

@@ -114,16 +114,19 @@ func (s *ISwitch) TuyaRefresh(delay time.Duration) ([]byte, error) {
 	defer s.Unsubscribe(k)
 
 	deadLine := time.Now().Add(delay)
-	err := s.App.SendEncryptedCommand(CodeMsgSet, s.App.RefreshMsg())
+	err := s.App.SendEncryptedRefresh(CodeMsgRefresh, s.App.RefreshMsg())
 	if err != nil {
 		return nil, err
 	}
 	for {
 		select {
 		case synMsg := <-c:
-			log.Println("[debug] synMsg:", synMsg.Code)
+			if synMsg.Code == CodeMsgStatus ||
+				synMsg.Code == CodeMsgAutoStatus {
+				return nil, err
+			}
 		case <-time.After(time.Until(deadLine)):
-			return nil, nil // errors.New("TCP Request Timeout")
+			return nil, err
 		}
 	}
 }
@@ -156,10 +159,14 @@ func (s *ISwitch) ProcessResponse(code int, data []byte) {
 		return
 	case code == 7:
 		return
+	case code == 8:
+		return
 	case code == 9:
 		return
 	case code == 10:
 		s.Notify(code, data, s)
+	case code == 18:
+		return
 	}
 
 	var r map[string]interface{}

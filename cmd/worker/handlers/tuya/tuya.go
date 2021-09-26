@@ -70,15 +70,12 @@ func TuyaScanner(app *application.Application) {
 				log.Printf("[tuya] Device %s - %s", b.Name(), err)
 			}
 
-			// parse data for processing
-			data, err := parseTuyaData(app, b.Name(), status)
-			if err != nil {
-				log.Println("[tuya] error parsing sensor data:", err.Error())
-			}
-
-			log.Println("[tuya] Publishing data from:", data.Name)
-			if data != nil {
-				// publish sensor data
+			if len(status) != 0 {
+				// parse data for processing
+				data, err := parseTuyaData(app, b.Name(), status)
+				if err != nil {
+					log.Println("[tuya] error parsing sensor data:", err.Error())
+				}
 				mqtt.Publish(app, data)
 				exporter.LogPrometheusData(data.Name, data.Switch, data.Power_mA, data.Power_W, data.Power_V)
 			}
@@ -90,7 +87,8 @@ func TuyaScanner(app *application.Application) {
 func parseTuyaData(app *application.Application, name string, data []byte) (*models.SensorData, error) {
 	var d Device
 	if err := json.Unmarshal(data, &d); err != nil {
-		panic(err)
+		log.Println("[debug] Error in parsing data", err)
+		return nil, err
 	}
 	return &models.SensorData{
 		Name:     name,

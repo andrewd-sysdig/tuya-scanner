@@ -77,7 +77,6 @@ func LogPrometheusData(name string, sw bool, Power_mA, Power_W, Power_V float64)
 
 	bump(name, ExpiryAtc)
 
-	// logsw(name, sw)
 	logPower_mA(name, Power_mA)
 	logPower_W(name, Power_W)
 	logPower_V(name, Power_V)

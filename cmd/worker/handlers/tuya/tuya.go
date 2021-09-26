@@ -75,11 +75,15 @@ func TuyaScanner(app *application.Application) {
 			if err != nil {
 				log.Println("[tuya] error parsing sensor data:", err.Error())
 			}
-			// publish sensor data
-			mqtt.Publish(app, data)
-			exporter.LogPrometheusData(data.Name, data.Switch, data.Power_mA, data.Power_W, data.Power_V)
-			time.Sleep(time.Duration(app.Cfg.Frequency) * time.Second)
+
+			log.Println("[tuya] Publishing data from:", data.Name)
+			if data != nil {
+				// publish sensor data
+				mqtt.Publish(app, data)
+				exporter.LogPrometheusData(data.Name, data.Switch, data.Power_mA, data.Power_W, data.Power_V)
+			}
 		}
+		time.Sleep(time.Duration(app.Cfg.Frequency) * time.Second)
 	}
 }
 

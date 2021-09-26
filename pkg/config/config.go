@@ -18,6 +18,7 @@ type Config struct {
 	BrokerPassword   string `mapstructure:"BROKER_PASSWORD"`
 	BrokerTopic      string `mapstructure:"BROKER_TOPIC"`
 	ClientID         string `mapstructure:"CLIENT_ID"`
+	Frequency        int    `mapstructure:"FREQ"`
 }
 
 type DeviceConfig []struct {

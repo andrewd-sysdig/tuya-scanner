@@ -78,7 +78,7 @@ func TuyaScanner(app *application.Application) {
 			// publish sensor data
 			mqtt.Publish(app, data)
 			exporter.LogPrometheusData(data.Name, data.Switch, data.Power_mA, data.Power_W, data.Power_V)
-			time.Sleep(15 * time.Second)
+			time.Sleep(time.Duration(app.Cfg.Frequency) * time.Second)
 		}
 	}
 }

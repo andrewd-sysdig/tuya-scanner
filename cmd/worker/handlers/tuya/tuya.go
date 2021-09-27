@@ -80,7 +80,8 @@ func TuyaScanner(app *application.Application) {
 				exporter.LogPrometheusData(data.Name, data.Switch, data.Power_mA, data.Power_W, data.Power_V)
 			}
 		}
-		time.Sleep(time.Duration(app.Cfg.Frequency) * time.Second)
+		timeout := time.Duration(app.Cfg.Frequency) - 1
+		time.Sleep(timeout * time.Second)
 	}
 }
 

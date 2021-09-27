@@ -32,7 +32,7 @@ func (a *Agent) Close() {
 // Subscribe to topic
 func (a *Agent) Subscribe(topic string, handler mqtt.MessageHandler) (err error) {
 	token := a.client.Subscribe(topic, 2, handler)
-	if !token.WaitTimeout(2 * time.Second) {
+	if !token.WaitTimeout(5 * time.Second) {
 		return errors.New("Subscribe timout")
 	}
 	if token.Error() != nil {
@@ -48,7 +48,7 @@ func (a *Agent) Subscribe(topic string, handler mqtt.MessageHandler) (err error)
 // Publish things
 func (a *Agent) Publish(topic string, retain bool, payload []byte) (err error) {
 	token := a.client.Publish(topic, 2, retain, payload)
-	if !token.WaitTimeout(2 * time.Second) {
+	if !token.WaitTimeout(5 * time.Second) {
 		return errors.New("Publish timout")
 	}
 	if token.Error() != nil {
@@ -104,7 +104,7 @@ func NewAgent(address string, port int, user string, password string, clientID s
 // Connect opens a new connection
 func (a *Agent) Connect() (err error) {
 	token := a.client.Connect()
-	if !token.WaitTimeout(2 * time.Second) {
+	if !token.WaitTimeout(5 * time.Second) {
 		return errors.New("open timeout")
 	}
 	if token.Error() != nil {

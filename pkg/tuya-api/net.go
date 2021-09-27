@@ -57,7 +57,7 @@ func (a *Appliance) tcpReceiver(cnx net.Conn, ccmd chan int) {
 		}
 		if int(uiRd(header)) != 0x55aa {
 			log.Println("Sync error:", err)
-			return 
+			return
 		}
 		code := int(uiRd(header[8:]))
 		sz := int(uiRd(header[12:]))
@@ -92,12 +92,12 @@ func (a *Appliance) getConnection(rcvFailed chan int) (net.Conn, error) {
 		}
 		addr = a.Ip + ":6668"
 		a.cnxMutex.Unlock()
-		cnx, err = net.DialTimeout("tcp", addr, time.Second*5)
+		cnx, err = net.DialTimeout("tcp", addr, 5*time.Second)
 		if err == nil {
 			go a.tcpReceiver(cnx, rcvFailed)
 			return cnx, nil
 		} else {
-			time.Sleep(3 * time.Second)
+			time.Sleep(5 * time.Second)
 			cnx = nil
 		}
 	}
@@ -170,7 +170,7 @@ func (a *Appliance) tcpConnManager(c chan query) {
 func tcpSend(cnx net.Conn, cmd int, data []byte) error {
 	// simple appliances are expected to reply quickly
 	now := time.Now()
-	cnx.SetWriteDeadline(now.Add(10 * time.Second))
+	cnx.SetWriteDeadline(now.Add(15 * time.Second))
 
 	// tuya appliances cannot handle multiple read!!
 	// => fill a buffer and write it

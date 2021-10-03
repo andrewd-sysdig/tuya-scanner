@@ -1,5 +1,10 @@
 # tuya-scanner — Scanner with MQTT and Prometheus exporter for the TUYA Devices
 
+# install dependencies
+```
+go get ./...
+```
+
 # buid
 ```
 GOOS=linux GOARCH=arm GOARM=7 go build -o tuya-scanner ./cmd/worker/

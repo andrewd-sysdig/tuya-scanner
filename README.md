@@ -3,6 +3,8 @@
 # buid
 ```
 GOOS=linux GOARCH=arm GOARM=7 go build -o tuya-scanner ./cmd/worker/
+or staticly built binary:
+CGO_ENABLED=0 go build -o tuya-scanner -a -ldflags '-extldflags "-static"' ./cmd/worker/
 ```
 
 # create
